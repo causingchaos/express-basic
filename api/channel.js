@@ -1,15 +1,26 @@
+"use strict";
 const express = require('express');
 const router = express.Router();
 const data = require('../data/data.js'); // data.channels[n].id .name .last_update
+
+/*
+Middleware
+*/
+router.use(function(req, res, next) {
+  console.log(req.url, "@", Date.now());
+  next();
+})
+
 /* 
   /api/channel/ API Endpoints
 */
-router.get("/", (req,res) => {
-  // return list of channels
-  // respond with a 200 status code (OK)
-  res.json(data);
-  //res.send({data: "hi"});
-  console.log("GET /api/channel/")  
+router
+  .get("/", (req,res) => {
+    // return list of channels
+    // respond with a 200 status code (OK)
+    res.json(data);
+    //res.send({data: "hi"});
+    console.log("GET /api/channel/")  
 });
 
 router.get("/:id", (req, res) => {
