@@ -16,3 +16,8 @@ add port you want to keep secret
 add JWT_KEY which is our secret key to sign all json web tokens 
 
 use genkey.js to generate a super secret key
+
+
+// notes 
+added auth/login routes
+TODO: add JWT
