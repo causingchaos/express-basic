@@ -1,12 +1,14 @@
 "use strict";
 const express = require("express");
 const app = express();
+const cors = require("cors");
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.port || process.env.PORT;
 const http = require('http');
 //console.log(http.METHODS); // logs avaliable http methods (get, put, ect)
 //console.log(http.STATUS_CODES); // logs avaliable http status codes
-const cors = require("cors");
+const jwt_key = process.env.JWT_KEY
 
 // API Routes
 const channelAPI = require('./api/channel.js');
@@ -51,15 +53,52 @@ app
   //res.send("<h1>Hello</h1>");  //determine the content-type automatically
   //res.status(404).end();
  // res.send({data: "hi"});
-  let secret = `<a href="/.htaccess">secret</a>`
-  let html = `<!Doctype html><html><head><title>Sample</title></head></html>`
-  html+= `<body><h1>Sample</h1><main>${secret}</main></body>` 
-  res.send(html);
+  //let secret = `<a href="/.htaccess">secret</a>`
+  //let html = `<!Doctype html><html><head><title>Sample</title></head></html>`
+  //html+= `<body><h1>Sample</h1><main>${secret}</main></body>` 
+  //res.send(html);
+  res.status(200).send({code: 0, message: 'ok'}); //health check route.
 })
 .post("/", (req, res) => {} )
 .patch("/", (req, res) => {} )
 .put("/", (req, res) => {} )
 .delete("/", (req, res) => {} );
+
+// token endpoint
+app.get('/token', (req, res) => {
+  // route to get a token
+  let id = Math.random().toString(36).substring(2, 8);
+  let limit = 60 * 3; // 180 seconds
+  let expires = Math.floor(Date.now() / 1000) + limit;
+  let payload = {
+    _id: id,
+    exp: expires,
+  };
+  let token = jwt.sign(payload, jwt_key);
+  res.status(201).send({code: 0, message: "ok", data: token});
+});
+
+// test endpoint   
+app.get('/test', (req, res) => {
+  // Simulate a route that needs a valid token to access (our middleware)
+  const header = req.header('Authorization');
+  const [type, token] = header.split(" ");
+  console.log(type);
+  console.log(token);
+  if( type === 'Bearer' && typeof token !== 'undefined') {
+    console.log('good to go');
+    try{
+      let payload = jwt.verify(token, jwt_key);
+      let current = Math.floor(Date.now() / 1000);
+      let diff = current - payload.exp;
+      res.status(200).send({code: 0, message: `all good ${diff} remaining`});
+    } catch (err) {
+      res.status(401).send({code: 123, message: 'Invalid or expired token.'}); // 401 invalid authorization
+    }
+  } else {
+    res.status(401).send({code: 456, message: 'Invalid Token'})
+  }
+});
 
 // Channel endpoints
 app.use('/api/channel', channelAPI);
