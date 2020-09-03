@@ -1,14 +1,29 @@
 "use strict";
 const express = require("express");
 const app = express();
+
+//** Package imports */
 const cors = require("cors");
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
-const port = process.env.port || process.env.PORT;
 const http = require('http');
 //console.log(http.METHODS); // logs avaliable http methods (get, put, ect)
 //console.log(http.STATUS_CODES); // logs avaliable http status codes
-const jwt_key = process.env.JWT_KEY
+
+/** Variables */
+const port = process.env.port || process.env.PORT;
+const jwt_key = process.env.JWT_KEY;
+const cookie_key = process.env.COOKIE_SECRET;
+const isSecure = app.get('env') != 'development'; //false when in dev
+
+//config of packages
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true, // adding on cors headers credentials allow cross origin
+})); 
+app.use(express.json()); // convert all incoming json to objects
+app.use(cookieParser(cookie_key)); // secret string uses it to encrypt.
 
 // API Routes
 const channelAPI = require('./api/channel.js');
@@ -17,10 +32,6 @@ const authAPI = require('./api/auth.js');
 // Custom Middleware
 const { sup, how } = require('./middleware/middle.js');
 app.use(sup); // run this on all incoming route requests
-
-//handle json body request
-app.use(cors()); // adding on cors headers
-app.use(express.json()); // convert all incoming json to objects
 
 let options = {
   dotfile: "allow", // allow, deny, ignore   ignore any . secret files

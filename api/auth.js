@@ -43,16 +43,20 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  // get email and password from the req.body
-  // find the match for the email
   let userMatch = users.find((user) => req.body.email === user.email);
+  let submittedPass = req.body.password;
   if (userMatch) {
     //validate the password using bcrypt
-    let submittedPass = req.body.password;
     let savedPass = userMatch.password; // hashed password stored in DB
     const passwordDidMatch = await bcrypt.compare(submittedPass, savedPass);
+    const isSecure = req.app.get('env') != 'development';
     if (passwordDidMatch) {
-      console.log("passwords matched")
+      console.log("passwords matched");
+      res.cookie('user_id', userMatch.email, {
+        httpOnly: true,
+        secure: isSecure, // false in dev mode (needs https)
+        signed: true,  //encrypt
+      });
       res.status(200).send({ data: { token: 'this is a pretend token' } });
     }else{
       res.status(401).send({
